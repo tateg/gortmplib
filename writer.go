@@ -205,6 +205,10 @@ func (w *Writer) Initialize() error {
 		return err
 	}
 
+	// create an uncontrolled goroutine to drain incoming data.
+	// we couldn't control it anyway because Writer does not own the connection.
+	go w.reader()
+
 	return nil
 }
 
@@ -573,6 +577,15 @@ func (w *Writer) writeTracks() error {
 	}
 
 	return nil
+}
+
+func (w *Writer) reader() {
+	for {
+		_, err := w.Conn.Read()
+		if err != nil {
+			return
+		}
+	}
 }
 
 // WriteAV1 writes a AV1 temporal unit.
